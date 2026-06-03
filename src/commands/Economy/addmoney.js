@@ -26,8 +26,8 @@ export default {
         const deferred = await InteractionHelper.safeDefer(interaction);
         if (!deferred) return;
 
-        // 1. Verify permissions using your global bot configuration file
-        const isOwner = config?.commands?.owners?.includes(interaction.user.id);
+       // 1. Verify permissions by checking your exact Discord ID
+const isOwner = interaction.user.id === "1373968527408496774";
         if (!isOwner) {
             throw createError(
                 "Unauthorized access attempt to addmoney",
