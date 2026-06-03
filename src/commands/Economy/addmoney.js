@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { createEmbed, successEmbed } from '../../utils/embeds.js';
-import { getEconomyData } from '../../utils/economy.js';
+import { getEconomyData, setEconomyData } from '../../utils/economy.js';
 import { withErrorHandling, createError, ErrorTypes } from '../../utils/errorHandler.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
@@ -26,8 +26,8 @@ export default {
         const deferred = await InteractionHelper.safeDefer(interaction);
         if (!deferred) return;
 
-       // 1. Verify permissions by checking your exact Discord ID
-const isOwner = interaction.user.id === "1373968527408496774";
+        // 1. Verify permissions by checking your exact Discord ID
+        const isOwner = interaction.user.id === "1373968527408496774"; // ⚠️ Replace this with your real ID!
         if (!isOwner) {
             throw createError(
                 "Unauthorized access attempt to addmoney",
@@ -61,13 +61,22 @@ const isOwner = interaction.user.id === "1373968527408496774";
             );
         }
 
-        // 3. Mutate the wallet total safely and apply changes to the DB record
+        // 3. Mutate the wallet total safely
         userData.wallet = (typeof userData.wallet === 'number' ? userData.wallet : 0) + amount;
-        await userData.save(); 
+        
+        // 4. Save using the correct framework function we found in daily.js!
+        await setEconomyData(client, guildId, targetUser.id, userData);
 
         const symbol = config?.economy?.currency?.symbol || '$';
-        const embed = successEmbed(`Successfully generated **${symbol}${amount.toLocaleString()}** and added it into **${targetUser.username}**'s wallet!`)
-            .setTitle("💰 Admin Cash Injection")
+        const embed = successEmbed(
+            "✅ Admin Cash Injection!",
+            `Successfully generated **${symbol}${amount.toLocaleString()}** and added it into **${targetUser.username}**'s wallet!`
+        )
+            .addFields({
+                name: "New Cash Balance",
+                value: `${symbol}${userData.wallet.toLocaleString()}`,
+                inline: true,
+            })
             .setFooter({
                 text: `Authorized by ${interaction.user.tag}`,
                 iconURL: interaction.user.displayAvatarURL(),
